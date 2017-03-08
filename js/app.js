@@ -2,6 +2,13 @@ var worldBoundX = 394;
 var worldBoundY = 394;
 var player = {};
 var allEnemies = [];
+var characterSelection = [
+    'images/char-boy.png',
+    'images/char-cat-girl.png',
+    'images/char-horn-girl.png',
+    'images/char-pink-girl.png',
+    'images/char-princess-girl.png'
+]
 
 // Enemies our player must avoid
 var Enemy = function(y, speed) {
@@ -40,9 +47,11 @@ Enemy.prototype.collision = function(player) {
 // Now write your own player class
 // This class requires an update(), render() and
 // a handleInput() method.
-var Player = function() {
+var Player = function(sprite) {
     this.alive = true;
-    this.sprite = 'images/char-boy.png';
+    this.characterSelected = false;
+    this.characterIndexSelected = 0;
+    this.selectetorPosition = 0;
     this.respawn = function () {
         this.x = 101;
         this.y = 390;
@@ -62,21 +71,47 @@ Player.prototype.update = function(dt) {
 }
 
 Player.prototype.render = function() {
-    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+    if(this.characterSelected) {
+        ctx.drawImage(Resources.get(characterSelection[this.characterIndexSelected]), this.x, this.y);
+    }
+    else {
+
+        ctx.drawImage(Resources.get('images/Selector.png'), this.selectetorPosition, this.y);
+        for(var characterindex in characterSelection) {
+            ctx.drawImage(Resources.get(characterSelection[characterindex]), characterindex * 100, this.y);
+        }
+    }
 };
 
 Player.prototype.handleInput = function(move) {
-    if (move === 'left' && this.x > 0) {
-        this.x -= 101;
+    if(this.characterSelected)
+    {
+        if (move === 'left' && this.x > 0) {
+            this.x -= 101;
+        }
+        if (move === 'right' && this.x < worldBoundX) {
+            this.x += 101;
+        }
+        if (move === 'up' && this.y > 0) {
+            this.y -= 80;
+        }
+        if (move === 'down' && this.y < worldBoundY) {
+            this.y += 80;
+        }
     }
-    if (move === 'right' && this.x < worldBoundX) {
-        this.x += 101;
+    else if(move === 'enter') {
+        this.characterSelected = true;
     }
-    if (move === 'up' && this.y > 0) {
-        this.y -= 80;
-    }
-    if (move === 'down' && this.y < worldBoundY) {
-        this.y += 80;
+    else {
+        if (move === 'left' && this.selectetorPosition > 0) {
+            this.selectetorPosition -= 100;
+            this.characterIndexSelected = this.selectetorPosition / 100;
+        }
+        var upperBound = (characterSelection.length-1) * 100
+        if (move === 'right' && this.selectetorPosition < upperBound) {
+            this.selectetorPosition += 100;
+            this.characterIndexSelected = this.selectetorPosition / 100;
+        }
     }
 }
 // Now instantiate your objects.
@@ -98,9 +133,9 @@ document.addEventListener('keyup', function(e) {
         37: 'left',
         38: 'up',
         39: 'right',
-        40: 'down'
+        40: 'down',
+        13: 'enter'
     };
-
     player.handleInput(allowedKeys[e.keyCode]);
 });
 

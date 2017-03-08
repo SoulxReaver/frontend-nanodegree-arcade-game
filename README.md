@@ -6,9 +6,13 @@ Control
     s = down
     r = right
     l = left
+    enter = to Confirm Charactor Selection
 
 Game Play
 Avoid the bugs
+select your charactor at the begin.
+touch the bugs and it will reset the game bringing you back
+to the character selection screen.
 
 Score
 reach the water to earn a score
