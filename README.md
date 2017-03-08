@@ -1,3 +1,20 @@
+Start
+Open index.html on browser to play
+
+Control
+    w = up
+    s = down
+    r = right
+    l = left
+
+Game Play
+Avoid the bugs
+
+Score
+reach the water to earn a score
+
+
+
 frontend-nanodegree-arcade-game
 ===============================
 
