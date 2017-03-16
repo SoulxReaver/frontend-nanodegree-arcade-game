@@ -37,9 +37,10 @@ Enemy.prototype.render = function () {
 Enemy.prototype.collision = function (player) {
     var collisionDetectionLowerBound = this.x - 70;
     var collisionDetectionUpperBound = this.x + 70;
-    if (player.x <= collisionDetectionUpperBound
-        && player.x >= collisionDetectionLowerBound
-        && player.y == this.y ) {
+    if (player.x <= collisionDetectionUpperBound &&
+        player.x >= collisionDetectionLowerBound &&
+        player.y == this.y ) {
+            resetScore();
             player.alive = false;
     }
 };
@@ -71,7 +72,7 @@ Player.prototype.update = function (dt) {
     }
     if (this.y < 0) {
         this.respawn();
-        console.log('You Win!');
+        addScore(100);
     }
 };
 
@@ -83,8 +84,8 @@ Player.prototype.render = function () {
         ctx.drawImage(Resources.get(CHAR_SELECTION[this.characterIndexSelected]), this.x, this.y);
     } else {
         ctx.drawImage(Resources.get('images/Selector.png'), this.selectetorPosition, this.y);
-        for (var characterindex in CHAR_SELECTION) {
-            ctx.drawImage(Resources.get(CHAR_SELECTION[characterindex]), characterindex * 100, this.y);
+        for (var i = 0; i <  CHAR_SELECTION.length; i++) {
+            ctx.drawImage(Resources.get(CHAR_SELECTION[i]), i * 100, this.y);
         }
     }
 };
@@ -109,13 +110,29 @@ Player.prototype.handleInput = function (move) {
             this.selectetorPosition -= 100;
             this.characterIndexSelected = this.selectetorPosition / 100;
         }
-        var upperBound = (CHAR_SELECTION.length-1) * 100
+        var upperBound = (CHAR_SELECTION.length-1) * 100;
         if (move === 'right' && this.selectetorPosition < upperBound) {
             this.selectetorPosition += 100;
             this.characterIndexSelected = this.selectetorPosition / 100;
         }
     }
 };
+
+/**
+ * @description update ScoreBoard
+ * @param Score
+ */
+function addScore(score) {
+    document.getElementsByClassName("score")[0].innerHTML =
+        parseInt(document.getElementsByClassName("score")[0].innerHTML) + score;
+}
+
+/**
+ * @description clear ScoreBoard
+ */
+function resetScore() {
+    document.getElementsByClassName("score")[0].innerHTML = 0;
+}
 
 /**
  * @description create allEnemies and player
