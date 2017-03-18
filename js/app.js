@@ -1,22 +1,66 @@
+'use strict';
+
 var WORLD_BOUND_X = 394;
 var WORLD_BOUND_Y = 394;
+var ENEMEIES_DEFAULT_POSITION_X = -200;
 var player = {};
 var allEnemies = [];
 var CHAR_SELECTION = [
-    'images/char-boy.png',
-    'images/char-cat-girl.png',
-    'images/char-horn-girl.png',
-    'images/char-pink-girl.png',
-    'images/char-princess-girl.png'
+    {
+        sprite: 'images/char-boy.png',
+        x: 0,
+        y: WORLD_BOUND_Y
+    },
+    {
+        sprite: 'images/char-cat-girl.png',
+        x: 101,
+        y: WORLD_BOUND_Y
+    },
+    {
+        sprite: 'images/char-horn-girl.png',
+        x: 202,
+        y: WORLD_BOUND_Y
+    },
+    {
+        sprite: 'images/char-pink-girl.png',
+        x: 303,
+        y: WORLD_BOUND_Y
+    },
+    {
+        sprite: 'images/char-princess-girl.png',
+        x: 404,
+        y: WORLD_BOUND_Y
+    }
 ];
+
+var CHAR_SELECTOR = {
+    sprite: 'images/Selector.png',
+    x: 0,
+    y: WORLD_BOUND_Y
+}
+
+function Entity(x, y, sprite) {
+    this.x = x;
+    this.y = y;
+    this.sprite = sprite;
+}
+
+// Draw the entites on the screen
+Entity.prototype.render = function () {
+    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+}
 
 // Enemies our player must avoid
 var Enemy = function (y, speed) {
-    this.x = -200;
+    this.x = ENEMEIES_DEFAULT_POSITION_X;
     this.y = y;
+    this.size = 70;
     this.movementSpeed = speed;
     this.sprite = 'images/enemy-bug.png';
 };
+
+Enemy.prototype = Object.create(Entity.prototype);
+Enemy.prototype.constructor = Enemy;
 
 // Update the enemy's position, required method for game
 // Parameter: dt, a time delta between ticks
@@ -28,65 +72,45 @@ Enemy.prototype.update = function (dt) {
     this.x = this.x > WORLD_BOUND_X + 100 ? -100 : this.x;
 };
 
-// Draw the enemy on the screen, required method for game
-Enemy.prototype.render = function () {
-    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
-};
-
-// kill player on collision
-Enemy.prototype.collision = function (player) {
-    var collisionDetectionLowerBound = this.x - 70;
-    var collisionDetectionUpperBound = this.x + 70;
-    if (player.x <= collisionDetectionUpperBound &&
-        player.x >= collisionDetectionLowerBound &&
-        player.y == this.y ) {
-            resetScore();
-            player.alive = false;
-    }
-};
-
 /**
  * @description Represents a Player
  * @constructor
  */
-var Player = function () {
-    this.alive = true;
+var Player = function (x, y, sprite) {
+    this.sprite = sprite;
+    this.defaultPositionX = x;
+    this.defaultPositionY = y;
+    this.x = x;
+    this.y = y;
     this.characterSelected = false;
     this.characterIndexSelected = 0;
-    this.selectetorPosition = 0;
-    this.respawn = function () {
-        this.x = 101;
-        this.y = 390;
-        this.alive = true;
-    };
-    this.respawn();
+    this.score = 0;
 };
+
+Player.prototype = Object.create(Entity.prototype);
+Player.prototype.constructor = Player;
 
 /**
  * @description if player reach the end of the board they win. if they are not alive then restart the game
  * @param {number} dt - a time delta between ticks
  */
 Player.prototype.update = function (dt) {
-    if (!this.alive) {
-        start();
-    }
+    document.getElementsByClassName("score")[0].innerHTML = this.score;
     if (this.y < 0) {
         this.respawn();
-        addScore(100);
+        this.addScore(100);
     }
 };
 
 /**
- * @description draw player to screen
+ * @description render player
  */
 Player.prototype.render = function () {
-    if (this.characterSelected) {
-        ctx.drawImage(Resources.get(CHAR_SELECTION[this.characterIndexSelected]), this.x, this.y);
-    } else {
-        ctx.drawImage(Resources.get('images/Selector.png'), this.selectetorPosition, this.y);
-        for (var i = 0; i <  CHAR_SELECTION.length; i++) {
-            ctx.drawImage(Resources.get(CHAR_SELECTION[i]), i * 100, this.y);
-        }
+    Object.getPrototypeOf(Player.prototype).render.call(this);
+    if (!this.characterSelected) {
+        CHAR_SELECTION.forEach(function (char) {
+            ctx.drawImage(Resources.get(char.sprite), char.x, char.y);
+        });
     }
 };
 
@@ -95,26 +119,51 @@ Player.prototype.render = function () {
  * @param move - key pressed
  */
 Player.prototype.handleInput = function (move) {
-    if (this.characterSelected && move === 'left' && this.x > 0) {
-        this.x -= 101;
-    } else if (this.characterSelected && move === 'right' && this.x < WORLD_BOUND_X) {
-        this.x += 101;
-    } else if (this.characterSelected && move === 'up' && this.y > 0) {
-        this.y -= 80;
-    } else if (this.characterSelected && move === 'down' && this.y < WORLD_BOUND_Y) {
-        this.y += 80;
-    } else if (move === 'enter') {
+    if (!this.characterSelected) {
+        this.handleInputForCharacterSelection(move);
+    }
+    else {
+        this.handleInputForGamePlay(move);
+    }
+};
+
+/**
+ * @description player control on character selection
+ */
+Player.prototype.handleInputForCharacterSelection = function (move) {
+    if (move === 'enter') {
         this.characterSelected = true;
-    } else {
-        if (move === 'left' && this.selectetorPosition > 0) {
-            this.selectetorPosition -= 100;
-            this.characterIndexSelected = this.selectetorPosition / 100;
-        }
-        var upperBound = (CHAR_SELECTION.length-1) * 100;
-        if (move === 'right' && this.selectetorPosition < upperBound) {
-            this.selectetorPosition += 100;
-            this.characterIndexSelected = this.selectetorPosition / 100;
-        }
+        this.sprite = CHAR_SELECTION[this.characterIndexSelected].sprite;
+    }
+    if (move === 'left' && this.x > 0) {
+        this.x -= 101;
+        this.characterIndexSelected--;
+    }
+
+    if (move === 'right' && this.x < WORLD_BOUND_X) {
+        this.x += 101;
+        this.characterIndexSelected++;
+    }
+};
+
+/**
+ * @description player control after character selection
+ */
+Player.prototype.handleInputForGamePlay = function (move) {
+    if (move === 'left' && this.x > 0) {
+        this.x -= 101;
+    }
+
+    if (move === 'right' && this.x < WORLD_BOUND_X) {
+        this.x += 101;
+    }
+
+    if (move === 'up' && this.y > 0) {
+        this.y -= 80;
+    }
+
+    if (move === 'down' && this.y < WORLD_BOUND_Y) {
+        this.y += 80;
     }
 };
 
@@ -122,17 +171,25 @@ Player.prototype.handleInput = function (move) {
  * @description update ScoreBoard
  * @param Score
  */
-function addScore(score) {
-    document.getElementsByClassName("score")[0].innerHTML =
-        parseInt(document.getElementsByClassName("score")[0].innerHTML) + score;
+Player.prototype.addScore = function (score) {
+    this.score += score;
 }
 
 /**
  * @description clear ScoreBoard
  */
-function resetScore() {
-    document.getElementsByClassName("score")[0].innerHTML = 0;
+Player.prototype.resetScore = function () {
+    this.score = 0;
 }
+
+/**
+ * @description set default player position
+ */
+Player.prototype.respawn = function () {
+    this.x = this.defaultPositionX;
+    this.y = this.defaultPositionY;
+};
+
 
 /**
  * @description create allEnemies and player
@@ -140,12 +197,12 @@ function resetScore() {
 var start = function () {
     allEnemies = [];
     allEnemies.push(
-        new Enemy(70, 220),
-        new Enemy(150, 160),
-        new Enemy(230, 101)
+        new Enemy(74, 220),
+        new Enemy(154, 160),
+        new Enemy(234, 101)
     );
 
-    player = new Player();
+    player = new Player(CHAR_SELECTOR.x, CHAR_SELECTOR.y, CHAR_SELECTOR.sprite);
 };
 
 /**
@@ -162,5 +219,3 @@ document.addEventListener('keyup', function (e) {
     };
     player.handleInput(allowedKeys[e.keyCode]);
 });
-
-start();
