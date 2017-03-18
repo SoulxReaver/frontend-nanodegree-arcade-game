@@ -37,18 +37,18 @@ var CHAR_SELECTOR = {
     sprite: 'images/Selector.png',
     x: 0,
     y: WORLD_BOUND_Y
-}
+};
 
-function Entity(x, y, sprite) {
+var Entity = function (x, y, sprite) {
     this.x = x;
     this.y = y;
     this.sprite = sprite;
-}
+};
 
 // Draw the entites on the screen
 Entity.prototype.render = function () {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
-}
+};
 
 // Enemies our player must avoid
 var Enemy = function (y, speed) {
@@ -173,14 +173,14 @@ Player.prototype.handleInputForGamePlay = function (move) {
  */
 Player.prototype.addScore = function (score) {
     this.score += score;
-}
+};
 
 /**
  * @description clear ScoreBoard
  */
 Player.prototype.resetScore = function () {
     this.score = 0;
-}
+};
 
 /**
  * @description set default player position
