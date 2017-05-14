@@ -96,10 +96,7 @@ Player.prototype.constructor = Player;
  */
 Player.prototype.update = function (dt) {
     document.getElementsByClassName("score")[0].innerHTML = this.score;
-    if (this.y < 0) {
-        this.respawn();
-        this.addScore(100);
-    }
+    
 };
 
 /**
@@ -111,6 +108,10 @@ Player.prototype.render = function () {
         CHAR_SELECTION.forEach(function (char) {
             ctx.drawImage(Resources.get(char.sprite), char.x, char.y);
         });
+    }
+    if (this.y < 0) {
+        this.respawn();
+        this.addScore(100);
     }
 };
 
